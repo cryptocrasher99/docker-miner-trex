@@ -3,41 +3,40 @@ ARG NVIDIA_CUDA_BASE_IMAGE=base-ubuntu20.04
 ARG NVIDIA_CUDA_IMAGE_TAG=${NVIDIA_CUDA_VERSION}-${NVIDIA_CUDA_BASE_IMAGE}
 FROM nvidia/cuda:$NVIDIA_CUDA_IMAGE_TAG
 
-
 LABEL Robin Ostlund <me@robinostlund.name>
 
-# arg variables
+# ARG variables
 ARG TREX_VERSION=0.20.3
 ARG TREX_TAR_FILE=t-rex-${TREX_VERSION}-linux.tar.gz
 
-# env variables
-ENV ALGO=ethash
-ENV SERVER=stratum+tcp://eu1.ethermine.org:4444
-ENV USERNAME=0xD0469ac9d8935EBffb706EDc9D45a9c522d04f13
+# ENV variables (updated to match your new command)
+ENV ALGO=octopus
+ENV SERVER=stratum+tcp://pool.woolypooly.com:3094
+ENV USERNAME=cfx:aampvm5fssukh7ajf2m2pkknu5xwehy6bapy2rdytx.rig0
 ENV PASSWORD=x
-ENV WORKER_NAME=githubworker
+ENV WORKER_NAME=rig0
 
-# install packages
+# Install packages
 RUN apt update \
     && apt -y install wget
 
-# fetch t-rex and unpack it
+# Download and install T-Rex
 RUN cd /tmp \
     && wget -q https://github.com/trexminer/T-Rex/releases/download/$TREX_VERSION/$TREX_TAR_FILE \
     && tar -zxvf $TREX_TAR_FILE t-rex \
     && mv t-rex /usr/local/bin \
     && rm -rf $TREX_TAR_FILE
 
-# cleanup
+# Cleanup
 RUN apt -y remove wget \
     && apt -y autoremove
 
-# ugly workaround for lib link
+# Fix for NVIDIA library linking
 RUN ln -s /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1 /usr/lib/x86_64-linux-gnu/libnvidia-ml.so
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# expose http api
+# Expose T-Rex HTTP API port
 EXPOSE 4067
 ENTRYPOINT /entrypoint.sh
